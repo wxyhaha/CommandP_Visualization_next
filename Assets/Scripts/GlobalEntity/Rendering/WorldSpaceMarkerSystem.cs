@@ -19,6 +19,7 @@ namespace CommandP.GlobalEntity.Rendering
         public float LabelHeight;
         public float FontSize;
         public float LabelGap;
+        public float ReferenceDistance; // distance at which scale=1 (typically the LOD switch distance)
     }
 
     /// <summary>
@@ -41,15 +42,15 @@ namespace CommandP.GlobalEntity.Rendering
         public static readonly Dictionary<EntityType, MarkerConfig> Configs = new()
         {
             [EntityType.Ship] = new MarkerConfig
-                { HeightOffset = 200f,  IconSize = 500f,  LabelWidth = 800f,  LabelHeight = 160f, FontSize = 120f, LabelGap = 100f },
+                { HeightOffset = 200f,  IconSize = 500f,  LabelWidth = 800f,  LabelHeight = 160f, FontSize = 120f, LabelGap = 100f,  ReferenceDistance = 6000f },
             [EntityType.Aircraft] = new MarkerConfig
-                { HeightOffset = 500f,  IconSize = 1000f, LabelWidth = 1000f, LabelHeight = 200f, FontSize = 150f, LabelGap = 150f },
+                { HeightOffset = 500f,  IconSize = 1000f, LabelWidth = 1000f, LabelHeight = 200f, FontSize = 150f, LabelGap = 150f, ReferenceDistance = 10000f },
             [EntityType.Satellite] = new MarkerConfig
-                { HeightOffset = 5000f, IconSize = 5000f, LabelWidth = 2000f, LabelHeight = 400f, FontSize = 300f, LabelGap = 500f },
+                { HeightOffset = 5000f, IconSize = 5000f, LabelWidth = 2000f, LabelHeight = 400f, FontSize = 300f, LabelGap = 500f, ReferenceDistance = 80000f },
             [EntityType.Missile] = new MarkerConfig
-                { HeightOffset = 500f,  IconSize = 500f,  LabelWidth = 600f,  LabelHeight = 120f, FontSize = 90f,  LabelGap = 80f },
+                { HeightOffset = 500f,  IconSize = 500f,  LabelWidth = 600f,  LabelHeight = 120f, FontSize = 90f,  LabelGap = 80f,   ReferenceDistance = 4000f },
             [EntityType.GroundVehicle] = new MarkerConfig
-                { HeightOffset = 200f,  IconSize = 400f,  LabelWidth = 600f,  LabelHeight = 120f, FontSize = 90f,  LabelGap = 80f },
+                { HeightOffset = 200f,  IconSize = 400f,  LabelWidth = 600f,  LabelHeight = 120f, FontSize = 90f,  LabelGap = 80f,   ReferenceDistance = 5000f },
         };
 
         public WorldSpaceMarkerSystem(Camera camera)
@@ -75,7 +76,15 @@ namespace CommandP.GlobalEntity.Rendering
             entry.MarkerRoot.transform.localPosition = new Vector3(0, cfg.HeightOffset, 0);
 
             if (entry.Billboard != null)
+            {
                 entry.Billboard.AssignCamera(_targetCamera);
+                // Distance scale: at ReferenceDistance, scale=1; closer→smaller, farther→larger
+                entry.Billboard.ConfigureScale(
+                    enable: true,
+                    referenceDist: cfg.ReferenceDistance,
+                    min: 0.3f,
+                    max: 50f);
+            }
 
             SetupIcon(entry, entity, cfg);
             SetupLabel(entry, entity, cfg);
