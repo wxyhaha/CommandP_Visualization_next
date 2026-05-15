@@ -1,0 +1,25 @@
+# Unity 自动生成文件
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# 编辑器缓存
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+.DS_Store
+Thumbs.db
+
+# 包缓存
+Packages/**/[Pp]ackages.lock
+.claude/settings.local.json
+
+# Plastic SCM / Unity Version Control 元数据
+.plastic/

@@ -1,0 +1,196 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\otherCode\\unity\\CommandP_Visualization\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\WaterWorks\\DOCUMENTATION.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\WaterWorks\\DOCUMENTATION.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Vefects\\Trails VFX URP\\VFX\\Shaders\\SH_Vefects_VFX_URP_Trail_New.shader||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Vefects\\Trails VFX URP\\VFX\\Shaders\\SH_Vefects_VFX_URP_Trail_New.shader||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\loadOcean.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Core\\loadOcean.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\UnitViewManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Core\\UnitViewManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\UnitStore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Data\\Stores\\UnitStore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\DTOs\\ApiModels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Data\\DTOs\\ApiModels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Test\\UIManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Test\\UIManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\HttpPollingService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Core\\HttpPollingService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\AppManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Core\\AppManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\EventStore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Data\\Stores\\EventStore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\SideStore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Data\\Stores\\SideStore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DOCUMENTATION.txt",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\WaterWorks\\DOCUMENTATION.txt",
+              "RelativeDocumentMoniker": "Assets\\WaterWorks\\DOCUMENTATION.txt",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\WaterWorks\\DOCUMENTATION.txt",
+              "RelativeToolTip": "Assets\\WaterWorks\\DOCUMENTATION.txt",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-05-07T09:13:04.839Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "SH_Vefects_VFX_URP_Trail_New.shader",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Vefects\\Trails VFX URP\\VFX\\Shaders\\SH_Vefects_VFX_URP_Trail_New.shader",
+              "RelativeDocumentMoniker": "Assets\\Vefects\\Trails VFX URP\\VFX\\Shaders\\SH_Vefects_VFX_URP_Trail_New.shader",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Vefects\\Trails VFX URP\\VFX\\Shaders\\SH_Vefects_VFX_URP_Trail_New.shader",
+              "RelativeToolTip": "Assets\\Vefects\\Trails VFX URP\\VFX\\Shaders\\SH_Vefects_VFX_URP_Trail_New.shader",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-05-07T02:10:51.878Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "loadOcean.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\loadOcean.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\loadOcean.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\loadOcean.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\loadOcean.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAABKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T09:45:29.412Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "UnitViewManager.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\UnitViewManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\UnitViewManager.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\UnitViewManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\UnitViewManager.cs",
+              "ViewState": "AgIAAM8FAAAAAAAAAAAiwFYGAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-24T07:45:18.467Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "UIManager.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Test\\UIManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Test\\UIManager.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Test\\UIManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Test\\UIManager.cs",
+              "ViewState": "AgIAAGYAAAAAAAAAAAAkwJwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T09:36:42.452Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AppManager.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\AppManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\AppManager.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\AppManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\AppManager.cs",
+              "ViewState": "AgIAAF4AAAAAAAAAAAAiwHwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T09:35:54.635Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "SideStore.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\SideStore.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Data\\Stores\\SideStore.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\SideStore.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Data\\Stores\\SideStore.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T09:35:09.754Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "EventStore.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\EventStore.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Data\\Stores\\EventStore.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\EventStore.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Data\\Stores\\EventStore.cs",
+              "ViewState": "AgIAAC8AAAAAAAAAAAAqwFcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T09:34:10.236Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "UnitStore.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\UnitStore.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Data\\Stores\\UnitStore.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\Stores\\UnitStore.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Data\\Stores\\UnitStore.cs",
+              "ViewState": "AgIAAHkAAAAAAAAAAAAiwJcAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T09:32:35.592Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "HttpPollingService.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\HttpPollingService.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Core\\HttpPollingService.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Core\\HttpPollingService.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Core\\HttpPollingService.cs",
+              "ViewState": "AgIAAJ0AAAAAAAAAAAAiwNMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T09:31:00.702Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ApiModels.cs",
+              "DocumentMoniker": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\DTOs\\ApiModels.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Data\\DTOs\\ApiModels.cs",
+              "ToolTip": "D:\\otherCode\\unity\\CommandP_Visualization\\Assets\\Scripts\\Data\\DTOs\\ApiModels.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Data\\DTOs\\ApiModels.cs",
+              "ViewState": "AgIAAH8BAAAAAAAAAAAiwKYBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T09:29:09.538Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
