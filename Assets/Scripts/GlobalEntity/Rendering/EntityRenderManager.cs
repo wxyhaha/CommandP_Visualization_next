@@ -233,8 +233,22 @@ namespace CommandP.GlobalEntity.Rendering
                 double3 tEcef = GeoCoordConverter.LlhToEcefWgs84(lookLon.Value, lookLat.Value, lookAlt ?? 0);
                 double3 tUnity = GeoCoordConverter.EcefToUnity(tEcef);
                 Vector3 tp = new Vector3((float)tUnity.x, (float)tUnity.y, (float)tUnity.z);
-                Vector3 up = new Vector3((float)tEcef.x, (float)tEcef.y, (float)tEcef.z).normalized;
-                _targetCamera.transform.LookAt(tp, up);
+                double3 upEcef = math.normalize(camEcef);
+                double3 upUnityD = GeoCoordConverter.EcefToUnity(camEcef + upEcef * 10.0) - camUnity;
+                Vector3 up = new Vector3((float)upUnityD.x, (float)upUnityD.y, (float)upUnityD.z).normalized;
+                Vector3 forward = (tp - _targetCamera.transform.position).normalized;
+                forward = Vector3.ProjectOnPlane(forward, up).normalized;
+                if (forward.sqrMagnitude < 1e-6f)
+                {
+                    forward = Vector3.ProjectOnPlane(_targetCamera.transform.forward, up).normalized;
+                }
+                if (forward.sqrMagnitude < 1e-6f)
+                {
+                    forward = Vector3.Cross(up, Vector3.right).normalized;
+                    if (forward.sqrMagnitude < 1e-6f)
+                        forward = Vector3.Cross(up, Vector3.forward).normalized;
+                }
+                _targetCamera.transform.rotation = Quaternion.LookRotation(forward, up);
             }
         }
 

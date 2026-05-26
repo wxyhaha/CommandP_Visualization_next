@@ -71,11 +71,8 @@ namespace CommandP.GlobalEntity.Rendering
                 float scale = ModelScales.TryGetValue(entity.Type, out var s) ? s : 50f;
                 instance.transform.localScale = Vector3.one * scale;
 
-                // 自动检测并设置修正旋转
-                Quaternion? autoFix = ModelOrientationFixer.GetRecommendedFix(instance);
                 Vector3 manualOffset = ModelRotationOffsets.TryGetValue(entity.Type, out var ro) ? ro : Vector3.zero;
-                Quaternion fixRot = autoFix ?? Quaternion.Euler(manualOffset);
-                rotationFix.transform.localRotation = fixRot;
+                rotationFix.transform.localRotation = Quaternion.Euler(manualOffset);
 
                 entry.ModelInstance = instance;
                 entry.ModelRoot.SetActive(true);
