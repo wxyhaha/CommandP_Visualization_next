@@ -1,3 +1,4 @@
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -5,8 +6,14 @@ using Object = UnityEngine.Object;
 namespace CommandP.GlobalEntity.Rendering
 {
     /// <summary>
-    /// GLB 模型视图管理: 实例化模型、更新变换、启用/停用。
-    /// 模型通过 ModelCache 加载 (Resources.Load 缓存)。
+    /// GLB model view manager.
+    /// Hierarchy: EntityRoot(GlobeAnchor ENU) -> ModelRoot(heading) -> RotationFix(model fix) -> GLB
+    ///
+    /// Orientation:
+    ///   GlobeAnchor (adjustOrientation=true) sets EntityRoot.rotation to local ENU.
+    ///   In ENU: +X=East, +Y=Up, +Z=North.
+    ///   We apply heading as Euler(0, heading, 0) on ModelRoot, rotating around Up (Y).
+    ///   RotationFix corrects each model's forward axis to align with +Z (Unity forward).
     /// </summary>
     public class ModelViewSystem
     {
@@ -15,14 +22,31 @@ namespace CommandP.GlobalEntity.Rendering
 
         private static readonly Dictionary<EntityType, float> ModelScales = new()
         {
-            { EntityType.Ship,          200f },
-            { EntityType.Aircraft,      20f },
-            { EntityType.Satellite,     100f },
-            { EntityType.Missile,       30f },
-            { EntityType.GroundVehicle, 150f },
+            { EntityType.Ship,          25f },
+            { EntityType.Aircraft,      25f },
+            { EntityType.Satellite,     25f },
+            { EntityType.Missile,       25f },
+            { EntityType.GroundVehicle, 25f },
         };
 
-        // 模型旋转修正 — 模型已在 Blender 统一朝向, 全部清零
+        /// <summary>
+        /// Per-model rotation correction applied on RotationFix.
+        /// Aligns model's nose with Unity +Z so heading rotation works.
+        /// </summary>
+        private static readonly Dictionary<string, Vector3> ModelCorrections = new()
+        {
+            { "fa-18f",                                     new Vector3(0f, -80f, 0f) },
+            { "mig29",                                      new Vector3(0f, 53f, 0f) },
+            { "bengaluru_class_destroyer_d67",              Vector3.zero },
+            { "the_project_941__akula__typhoon_submarine",  Vector3.zero },
+            { "ugm-84",                                     Vector3.zero },
+            { "mim-104",                                    Vector3.zero },
+            { "satellite",                                  Vector3.zero },
+        };
+
+        /// <summary>
+        /// Per-entity-type runtime rotation offset (debug panel).
+        /// </summary>
         public static readonly Dictionary<EntityType, Vector3> ModelRotationOffsets = new()
         {
             { EntityType.Ship,          Vector3.zero },
@@ -39,7 +63,7 @@ namespace CommandP.GlobalEntity.Rendering
         }
 
         /// <summary>
-        /// 为指定实体实例化模型 (LOD 切换到 near 时调用)
+        /// Instantiate model for entity (LOD near switch).
         /// </summary>
         public void ShowModel(EntityData entity)
         {
@@ -53,12 +77,8 @@ namespace CommandP.GlobalEntity.Rendering
                 return;
             }
 
-            // ===== 层级: EntityRoot(GlobeAnchor) -> ModelRoot(heading) -> RotationFix(offset) -> GLB =====
-
-            // ModelRoot 的 rotatoin 由 UpdateTransforms 控制 (heading), 这里保持 identity
             entry.ModelRoot.transform.localRotation = Quaternion.identity;
 
-            // RotationFix — 修正 GLB 导入坐标系
             var rotationFix = new GameObject("RotationFix");
             rotationFix.transform.SetParent(entry.ModelRoot.transform, false);
             rotationFix.transform.localPosition = Vector3.zero;
@@ -68,11 +88,12 @@ namespace CommandP.GlobalEntity.Rendering
 
             if (instance != null)
             {
-                float scale = ModelScales.TryGetValue(entity.Type, out var s) ? s : 50f;
+                float scale = ModelScales.TryGetValue(entity.Type, out var s) ? s : 25f;
                 instance.transform.localScale = Vector3.one * scale;
 
-                Vector3 manualOffset = ModelRotationOffsets.TryGetValue(entity.Type, out var ro) ? ro : Vector3.zero;
-                rotationFix.transform.localRotation = Quaternion.Euler(manualOffset);
+                Vector3 modelCorr = ModelCorrections.TryGetValue(modelKey, out var mc) ? mc : Vector3.zero;
+                Vector3 typeOffset = ModelRotationOffsets.TryGetValue(entity.Type, out var to) ? to : Vector3.zero;
+                rotationFix.transform.localRotation = Quaternion.Euler(modelCorr + typeOffset);
 
                 entry.ModelInstance = instance;
                 entry.ModelRoot.SetActive(true);
@@ -80,7 +101,7 @@ namespace CommandP.GlobalEntity.Rendering
         }
 
         /// <summary>
-        /// 隐藏指定实体的模型 (LOD 切换到 far 时调用)
+        /// Hide entity model (LOD far switch).
         /// </summary>
         public void HideModel(EntityData entity)
         {
@@ -88,15 +109,30 @@ namespace CommandP.GlobalEntity.Rendering
                 return;
 
             entry.ModelRoot.SetActive(false);
+            if (entry.ModelInstance != null)
+                entry.ModelInstance.SetActive(false);
+        }
+
+        /// <summary>
+        /// Remove model instance.
+        /// </summary>
+        public void DestroyModel(string objectId)
+        {
+            if (!_viewEntries.TryGetValue(objectId, out var entry) || entry == null)
+                return;
 
             if (entry.ModelInstance != null)
             {
-                entry.ModelInstance.SetActive(false);
+                Object.Destroy(entry.ModelInstance);
+                entry.ModelInstance = null;
             }
         }
 
         /// <summary>
-        /// 每帧更新 near LOD 实体的模型朝向 (heading)
+        /// Per-frame: apply heading rotation on ModelRoot.
+        /// GlobeAnchor (adjustOrientation=true) handles ENU on EntityRoot.
+        /// In ENU: +Y=Up, +Z=North. So Euler(0, heading, 0) rotates around Up axis.
+        /// heading=0 -> +Z points North; heading=90 -> +Z points East.
         /// </summary>
         public void UpdateTransforms(IReadOnlyList<EntityData> entities, int count)
         {
@@ -110,27 +146,9 @@ namespace CommandP.GlobalEntity.Rendering
 
                 if (entry.ModelInstance == null) continue;
 
-                // 应用 heading 旋转 (0 = North = +Z, CW)
                 float headingAbs = e.HeadingDeg % 360f;
-                if (headingAbs < 0) headingAbs += 360f;
-
-                // EntityRoot 可能有 GlobeAnchor adjustOrientation，所以在本地空间旋转
+                if (headingAbs < 0f) headingAbs += 360f;
                 entry.ModelRoot.transform.localRotation = Quaternion.Euler(0f, headingAbs, 0f);
-            }
-        }
-
-        /// <summary>
-        /// 移除实体的模型实例
-        /// </summary>
-        public void DestroyModel(string objectId)
-        {
-            if (!_viewEntries.TryGetValue(objectId, out var entry) || entry == null)
-                return;
-
-            if (entry.ModelInstance != null)
-            {
-                Object.Destroy(entry.ModelInstance);
-                entry.ModelInstance = null;
             }
         }
     }

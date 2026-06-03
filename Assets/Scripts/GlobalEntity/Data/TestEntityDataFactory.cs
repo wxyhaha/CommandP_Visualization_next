@@ -1,10 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace CommandP.GlobalEntity.Data
 {
     /// <summary>
-    /// 固定测试数据工厂 — 南海区域场景。
-    /// 所有位置/速度/朝向均为固定值，不随机，便于观察和调试。
+    /// Test data factory — South China Sea scenario.
+    /// Aircraft now use waypoint-based spline flight paths.
+    /// Ships / Missiles / Ground vehicles keep straight-line motion.
     /// </summary>
     public static class TestEntityDataFactory
     {
@@ -40,7 +41,6 @@ namespace CommandP.GlobalEntity.Data
             sub.IconKey = "submarine";
             list.Add(sub);
 
-            // Opposing side ships
             list.Add(CreateShip("SHIP_DDG_03", "Arleigh Burke DDG (Blue)",
                 10.8, 114.0, 0.0, 20f, 0f,
                 "bengaluru_class_destroyer_d67", 2));
@@ -49,27 +49,52 @@ namespace CommandP.GlobalEntity.Data
                 10.6, 114.2, 0.0, 20f, 30f,
                 "bengaluru_class_destroyer_d67", 2));
 
-            // ==================== Aircraft ====================
+            // ==================== Aircraft (spline flight paths) ====================
 
+            // E-2D Hawkeye: slow patrol diamond around 12.5N 115E
             list.Add(CreateAircraft("AC_PATROL_01", "E-2D Hawkeye (Red)",
-                12.5, 115.0, 8000.0, 300f, 90f,
-                "fa-18f", 1));
+                300f, "fa-18f", 1,
+                (12.5, 115.0, 8000.0),
+                (13.0, 115.5, 8000.0),
+                (12.5, 116.0, 8000.0),
+                (12.0, 115.5, 8000.0)));
 
+            // F/A-18F #1: sweep from west through center
             list.Add(CreateAircraft("AC_FIGHTER_01", "F/A-18F (Red)",
-                11.0, 113.5, 10000.0, 500f, 45f,
-                "fa-18f", 1));
+                500f, "fa-18f", 1,
+                (11.0, 113.5, 10000.0),
+                (11.8, 114.5, 10000.0),
+                (12.5, 115.5, 10000.0),
+                (12.0, 116.0, 10000.0),
+                (11.2, 115.0, 10000.0),
+                (11.0, 113.5, 10000.0)));
 
+            // F/A-18F #2: close air support orbit near fleet
             list.Add(CreateAircraft("AC_FIGHTER_02", "F/A-18F (Red)",
-                11.2, 113.8, 10000.0, 520f, 60f,
-                "fa-18f", 1));
+                520f, "fa-18f", 1,
+                (11.2, 113.8, 10000.0),
+                (11.5, 114.2, 10000.0),
+                (11.3, 114.6, 10000.0),
+                (11.0, 114.2, 10000.0),
+                (11.2, 113.8, 10000.0)));
 
+            // MiG-29 #3: patrol from northeast
             list.Add(CreateAircraft("AC_FIGHTER_03", "MiG-29 (Blue)",
-                13.0, 115.5, 9000.0, 450f, 270f,
-                "mig29", 2));
+                450f, "mig29", 2,
+                (13.0, 115.5, 9000.0),
+                (13.5, 116.0, 9000.0),
+                (13.0, 116.5, 9000.0),
+                (12.5, 116.0, 9000.0),
+                (13.0, 115.5, 9000.0)));
 
+            // MiG-29 #4: intercept heading southwest
             list.Add(CreateAircraft("AC_FIGHTER_04", "MiG-29 (Blue)",
-                13.2, 115.3, 9000.0, 460f, 250f,
-                "mig29", 2));
+                460f, "mig29", 2,
+                (13.2, 115.3, 9000.0),
+                (12.8, 115.0, 9000.0),
+                (12.3, 114.8, 9000.0),
+                (12.8, 115.2, 9000.0),
+                (13.2, 115.3, 9000.0)));
 
             // ==================== LEO Satellites ====================
 
@@ -102,6 +127,46 @@ namespace CommandP.GlobalEntity.Data
             return list.ToArray();
         }
 
+        // ================================================================
+        // Aircraft with waypoints (spline flight)
+        // ================================================================
+
+        private static EntityData CreateAircraft(
+            string id, string name,
+            float speedKts, string modelKey, int sideId,
+            params (double lat, double lon, double alt)[] waypoints)
+        {
+            var wpList = new List<double[]>();
+            foreach (var w in waypoints)
+                wpList.Add(new double[] { w.lat, w.lon, w.alt });
+
+            // Initial position = first waypoint
+            var first = wpList[0];
+
+            var entity = new EntityData
+            {
+                ObjectId = id,
+                DisplayName = name,
+                Type = EntityType.Aircraft,
+                SideId = sideId,
+                LatitudeDeg = first[0],
+                LongitudeDeg = first[1],
+                HeightMeters = first[2],
+                SpeedKnots = speedKts,
+                HeadingDeg = 0f,
+                ModelAssetKey = modelKey,
+                EcefDirty = true,
+                Waypoints = wpList,
+                CurrentSegmentIndex = 0,
+                SegmentProgress = 0.0,
+            };
+            return entity;
+        }
+
+        // ================================================================
+        // Ships (straight-line)
+        // ================================================================
+
         private static EntityData CreateShip(
             string id, string name,
             double lat, double lon, double alt,
@@ -124,27 +189,9 @@ namespace CommandP.GlobalEntity.Data
             };
         }
 
-        private static EntityData CreateAircraft(
-            string id, string name,
-            double lat, double lon, double alt,
-            float speedKts, float heading,
-            string modelKey, int sideId)
-        {
-            return new EntityData
-            {
-                ObjectId = id,
-                DisplayName = name,
-                Type = EntityType.Aircraft,
-                SideId = sideId,
-                LatitudeDeg = lat,
-                LongitudeDeg = lon,
-                HeightMeters = alt,
-                SpeedKnots = speedKts,
-                HeadingDeg = heading,
-                ModelAssetKey = modelKey,
-                EcefDirty = true,
-            };
-        }
+        // ================================================================
+        // Satellites (orbital)
+        // ================================================================
 
         private static EntityData CreateSatellite(
             string id, string name,
@@ -157,7 +204,6 @@ namespace CommandP.GlobalEntity.Data
                 DisplayName = name,
                 Type = EntityType.Satellite,
                 SideId = sideId,
-                // 初始位置设为南海区域上空
                 LatitudeDeg = 12.0,
                 LongitudeDeg = 115.0,
                 HeightMeters = altitudeKm * 1000.0,
@@ -172,6 +218,10 @@ namespace CommandP.GlobalEntity.Data
                 EcefDirty = true,
             };
         }
+
+        // ================================================================
+        // Missiles (straight-line)
+        // ================================================================
 
         private static EntityData CreateMissile(
             string id, string name,
@@ -194,6 +244,10 @@ namespace CommandP.GlobalEntity.Data
                 EcefDirty = true,
             };
         }
+
+        // ================================================================
+        // Ground Vehicles (stationary)
+        // ================================================================
 
         private static EntityData CreateGroundVehicle(
             string id, string name,

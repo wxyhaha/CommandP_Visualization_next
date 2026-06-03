@@ -132,7 +132,7 @@ namespace CommandP.GlobalEntity.Rendering
             if (iconGo.GetComponent<BoxCollider>() == null)
             {
                 var bc = iconGo.AddComponent<BoxCollider>();
-                bc.size = new Vector3(1, 1, 0.1f);
+                bc.size = new Vector3(1, 1, 100f);
             }
 
             entry.IconRenderer = mr;

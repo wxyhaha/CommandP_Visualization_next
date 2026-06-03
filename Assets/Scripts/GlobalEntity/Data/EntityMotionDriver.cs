@@ -1,13 +1,14 @@
-using CommandP.GlobalEntity.Services;
+﻿using CommandP.GlobalEntity.Services;
 using UnityEngine;
 
 namespace CommandP.GlobalEntity.Data
 {
     /// <summary>
-    /// 实体运动驱动器: 每帧根据 heading + speed 推进所有实体的 LLH。
-    /// 飞机/舰船: 直线运动
-    /// 卫星: 圆轨道计算
-    /// 地面车辆: 静止
+    /// Entity motion driver.
+    /// - Aircraft with Waypoints: Catmull-Rom spline flight, heading from curve tangent.
+    /// - Aircraft without Waypoints / Ships / Missiles: straight-line (heading + speed).
+    /// - Satellites: orbital mechanics.
+    /// - Ground Vehicles: stationary.
     /// </summary>
     public class EntityMotionDriver : MonoBehaviour
     {
@@ -15,9 +16,13 @@ namespace CommandP.GlobalEntity.Data
         private int _entityCount;
         private bool _isPaused;
 
-        // WGS84 地球参数
         private const double EarthRadiusMeters = 6378137.0;
         private const double GravitationalParameter = 3.986004418e14;
+
+        /// <summary>
+        /// Threshold distance (meters) to consider a waypoint reached.
+        /// </summary>
+        private const double WaypointReachThreshold = 500.0;
 
         public bool IsPaused
         {
@@ -29,6 +34,15 @@ namespace CommandP.GlobalEntity.Data
         {
             _entities = entities;
             _entityCount = count;
+
+            // Precompute segment arc lengths for all spline entities
+            for (int i = 0; i < count; i++)
+            {
+                EntityData e = entities[i];
+                if (e == null || e.Waypoints == null || e.Waypoints.Count < 2) continue;
+                e.CurrentSegmentIndex = 0;
+                e.SegmentProgress = 0.0;
+            }
         }
 
         private void Update()
@@ -44,24 +58,106 @@ namespace CommandP.GlobalEntity.Data
                 EntityData e = _entities[i];
                 if (e == null || e.SpeedKnots <= 0f) continue;
 
-                switch (e.Type)
+                if (e.Waypoints != null && e.Waypoints.Count >= 2)
                 {
-                    case EntityType.Satellite:
-                        AdvanceSatellite(e, dt);
-                        break;
-                    default:
-                        AdvanceLinear(e, dt);
-                        break;
+                    AdvanceSpline(e, dt);
+                }
+                else
+                {
+                    switch (e.Type)
+                    {
+                        case EntityType.Satellite:
+                            AdvanceSatellite(e, dt);
+                            break;
+                        default:
+                            AdvanceLinear(e, dt);
+                            break;
+                    }
                 }
             }
         }
 
-        /// <summary>
-        /// 直线运动 (飞机/舰船/导弹/地面车辆)
-        /// </summary>
+        // ================================================================
+        // Spline-based flight (aircraft with waypoints)
+        // ================================================================
+
+        private void AdvanceSpline(EntityData e, float dt)
+        {
+            var wp = e.Waypoints;
+            int segCount = wp.Count - 1;
+            bool loop = (wp.Count >= 3); // loop if 3+ waypoints
+
+            int seg = e.CurrentSegmentIndex;
+            if (seg >= segCount)
+            {
+                // Reached end — for loop, wrap around; otherwise stop
+                if (loop)
+                {
+                    seg = 0;
+                    e.CurrentSegmentIndex = 0;
+                    e.SegmentProgress = 0.0;
+                }
+                else
+                {
+                    return; // stop at last waypoint
+                }
+            }
+
+            // Compute segment arc length for speed-based progression
+            double arcLen = CatmullRomSpline.SegmentArcLength(wp, seg, loop);
+            if (arcLen < 1.0) arcLen = 1.0; // avoid division by zero
+
+            double speedMs = e.SpeedKnots * 0.514444;
+            double dtParam = (speedMs * dt) / arcLen; // parameter advancement per frame
+
+            e.SegmentProgress += dtParam;
+
+            // Check if we've passed the current segment
+            if (e.SegmentProgress >= 1.0)
+            {
+                e.SegmentProgress -= 1.0;
+                e.CurrentSegmentIndex++;
+
+                // If wrapped past last segment
+                if (e.CurrentSegmentIndex >= segCount)
+                {
+                    if (loop)
+                    {
+                        e.CurrentSegmentIndex = 0;
+                    }
+                    else
+                    {
+                        e.CurrentSegmentIndex = segCount - 1;
+                        e.SegmentProgress = 1.0;
+                    }
+                }
+            }
+
+            // Evaluate position on spline
+            double[] pos = CatmullRomSpline.Evaluate(wp, e.CurrentSegmentIndex, e.SegmentProgress, loop);
+            e.LatitudeDeg = pos[0];
+            e.LongitudeDeg = pos[1];
+            e.HeightMeters = pos[2];
+            e.LongitudeDeg = GeoCoordConverter.NormalizeLongitude(e.LongitudeDeg);
+            e.EcefDirty = true;
+
+            // Compute heading from tangent
+            double[] tangent = CatmullRomSpline.Derivative(wp, e.CurrentSegmentIndex, e.SegmentProgress, loop);
+            // tangent is (dLat/dt, dLon/dt) — convert to bearing
+            double avgLat = pos[0];
+            double cosLat = System.Math.Cos(avgLat * System.Math.PI / 180.0);
+            double northComponent = tangent[0]; // dLat
+            double eastComponent = tangent[1] * System.Math.Max(0.1, cosLat); // dLon adjusted for latitude
+            e.HeadingDeg = (float)(System.Math.Atan2(eastComponent, northComponent) * 180.0 / System.Math.PI);
+            if (e.HeadingDeg < 0f) e.HeadingDeg += 360f;
+        }
+
+        // ================================================================
+        // Straight-line flight (ships, missiles, aircraft without waypoints)
+        // ================================================================
+
         private static void AdvanceLinear(EntityData e, float dt)
         {
-            // 1 knot = 0.514444 m/s, 1 deg lat ≈ 111320 m
             double speedMs = e.SpeedKnots * 0.514444;
             double distanceM = speedMs * dt;
 
@@ -72,16 +168,22 @@ namespace CommandP.GlobalEntity.Data
             double deltaLonDeg = (distanceM * System.Math.Sin(headingRad))
                 / (111320.0 * System.Math.Max(0.1, cosLat));
 
+            double oldLat = e.LatitudeDeg;
+            double oldLon = e.LongitudeDeg;
+
             e.LatitudeDeg += deltaLatDeg;
             e.LongitudeDeg += deltaLonDeg;
             e.LongitudeDeg = GeoCoordConverter.NormalizeLongitude(e.LongitudeDeg);
             e.EcefDirty = true;
+
+            e.HeadingDeg = GeoCoordConverter.BearingTo(
+                oldLat, oldLon, e.LatitudeDeg, e.LongitudeDeg);
         }
 
-        /// <summary>
-        /// 卫星轨道运动 (圆轨道 + 地球自转)
-        /// 按固定轨道参数计算每一帧的 LLH，不使用 heading/speed 的直线推进。
-        /// </summary>
+        // ================================================================
+        // Satellite orbital mechanics
+        // ================================================================
+
         private static void AdvanceSatellite(EntityData e, float dt)
         {
             if (!e.HasOrbitParams) return;
@@ -89,47 +191,38 @@ namespace CommandP.GlobalEntity.Data
             double altitudeM = e.OrbitAltitudeKm * 1000.0;
             double orbitRadiusM = EarthRadiusMeters + altitudeM;
 
-            // 轨道周期
             double periodSec = 2.0 * System.Math.PI
                 * System.Math.Sqrt(System.Math.Pow(orbitRadiusM, 3.0) / GravitationalParameter);
 
-            // 角速度
             double angularSpeedRadPerSec = (2.0 * System.Math.PI) / periodSec;
 
-            // 每帧推进相位
             e.OrbitPhaseDeg += angularSpeedRadPerSec * dt * (180.0 / System.Math.PI);
             e.OrbitPhaseDeg = e.OrbitPhaseDeg % 360.0;
             if (e.OrbitPhaseDeg < 0) e.OrbitPhaseDeg += 360.0;
 
-            // 地球自转补偿 (RAAN 随时间漂移 ~15.04 deg/hour)
             double earthRotationDegPerSec = 15.041067 / 3600.0;
             e.OrbitRaanDeg -= earthRotationDegPerSec * dt;
             e.OrbitRaanDeg = e.OrbitRaanDeg % 360.0;
             if (e.OrbitRaanDeg < 0) e.OrbitRaanDeg += 360.0;
 
-            // 计算 ECEF 位置
             double phaseRad = e.OrbitPhaseDeg * (System.Math.PI / 180.0);
             double inclinationRad = e.OrbitInclinationDeg * (System.Math.PI / 180.0);
             double raanRad = e.OrbitRaanDeg * (System.Math.PI / 180.0);
 
-            // 轨道平面坐标
             double xOrb = orbitRadiusM * System.Math.Cos(phaseRad);
             double yOrb = orbitRadiusM * System.Math.Sin(phaseRad);
 
-            // 绕 X 轴旋转倾角
             double cosInc = System.Math.Cos(inclinationRad);
             double sinInc = System.Math.Sin(inclinationRad);
             double yAfterInc = yOrb * cosInc;
             double zAfterInc = yOrb * sinInc;
 
-            // 绕 Z 轴旋转 RAAN
             double cosRaan = System.Math.Cos(raanRad);
             double sinRaan = System.Math.Sin(raanRad);
             double ecefX = xOrb * cosRaan - yAfterInc * sinRaan;
             double ecefY = xOrb * sinRaan + yAfterInc * cosRaan;
             double ecefZ = zAfterInc;
 
-            // ECEF → LLH
             EcefToLlhWgs84(ecefX, ecefY, ecefZ,
                 out double latitudeDeg, out double longitudeDeg, out double heightMeters);
 
@@ -137,7 +230,6 @@ namespace CommandP.GlobalEntity.Data
             e.LongitudeDeg = longitudeDeg;
             e.HeightMeters = heightMeters;
 
-            // 计算 heading (沿轨道切向)
             double lookAheadSec = 2.0;
             double aheadPhaseDeg = e.OrbitPhaseDeg + angularSpeedRadPerSec * lookAheadSec * (180.0 / System.Math.PI);
             double aheadPhaseRad = aheadPhaseDeg * (System.Math.PI / 180.0);
@@ -150,7 +242,7 @@ namespace CommandP.GlobalEntity.Data
             double aEcefZ = azInc;
 
             EcefToLlhWgs84(aEcefX, aEcefY, aEcefZ,
-                out double aheadLat, out double aheadLon, out _);
+                out double aheadLat, out double aheadLon, out double _);
 
             e.HeadingDeg = GeoCoordConverter.BearingTo(
                 latitudeDeg, longitudeDeg, aheadLat, aheadLon);
@@ -158,9 +250,6 @@ namespace CommandP.GlobalEntity.Data
             e.EcefDirty = true;
         }
 
-        /// <summary>
-        /// ECEF → LLH (WGS84 椭球体, Newton-Raphson 迭代)
-        /// </summary>
         private static void EcefToLlhWgs84(
             double x, double y, double z,
             out double latitudeDeg, out double longitudeDeg, out double heightMeters)

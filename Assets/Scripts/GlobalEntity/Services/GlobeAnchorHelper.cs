@@ -1,16 +1,14 @@
-using CesiumForUnity;
+﻿using CesiumForUnity;
 using Unity.Mathematics;
 
 namespace CommandP.GlobalEntity.Services
 {
     /// <summary>
-    /// CesiumGlobeAnchor 静态辅助方法。
-    /// 直接调用 Cesium 1.23.1 公开 API，不使用反射。
-    /// </summary>
+    /// CesiumGlobeAnchor 闈欐€佽緟鍔╂柟娉曘€?    /// 鐩存帴璋冪敤 Cesium 1.23.1 鍏紑 API锛屼笉浣跨敤鍙嶅皠銆?    /// </summary>
     public static class GlobeAnchorHelper
     {
         /// <summary>
-        /// 直接设置 GlobeAnchor 的经纬度高度 (无反射)
+        /// 鐩存帴璁剧疆 GlobeAnchor 鐨勭粡绾害楂樺害 (鏃犲弽灏?
         /// </summary>
         public static void SetLongitudeLatitudeHeight(
             this CesiumGlobeAnchor anchor,
@@ -18,14 +16,14 @@ namespace CommandP.GlobalEntity.Services
         {
             if (anchor == null) return;
 
-            // 360 度连续经度: 先归一化到 [-180, 180]
+            // 360 搴﹁繛缁粡搴? 鍏堝綊涓€鍖栧埌 [-180, 180]
             longitudeDeg = GeoCoordConverter.NormalizeLongitude(longitudeDeg);
 
             anchor.longitudeLatitudeHeight = new double3(longitudeDeg, latitudeDeg, heightMeters);
         }
 
         /// <summary>
-        /// 在 GameObject 上创建并配置 GlobeAnchor
+        /// 鍦?GameObject 涓婂垱寤哄苟閰嶇疆 GlobeAnchor
         /// </summary>
         public static CesiumGlobeAnchor AttachGlobeAnchor(
             UnityEngine.GameObject go,
@@ -41,7 +39,7 @@ namespace CommandP.GlobalEntity.Services
         }
 
         /// <summary>
-        /// 批量更新所有实体的 GlobeAnchor 位置
+        /// 鎵归噺鏇存柊鎵€鏈夊疄浣撶殑 GlobeAnchor 浣嶇疆
         /// </summary>
         public static void ApplyAllPositions(
             EntityData[] entities, int count,

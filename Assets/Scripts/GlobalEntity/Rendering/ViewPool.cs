@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CesiumForUnity;
 using CommandP.GlobalEntity.Services;
@@ -12,11 +12,11 @@ namespace CommandP.GlobalEntity.Rendering
     /// Pool entry — EntityRoot is the single source of world position (via GlobeAnchor).
     ///
     /// Hierarchy:
-    ///   EntityRoot (CesiumGlobeAnchor + EntityHandle)
-    ///   ├── ModelRoot   (3D GLB, LOD near)
-    ///   └── MarkerRoot  (WorldSpace tactical marker, LOD far)
-    ///       ├── IconQuad
-    ///       └── WorldSpaceCanvas / LabelText
+    ///   EntityRoot (CesiumGlobeAnchor + EntityHandle + TrailRenderer)
+    ///   ├─ ModelRoot   (3D GLB, LOD near)
+    ///   └─ MarkerRoot  (WorldSpace tactical marker, LOD far)
+    ///       ├─ IconQuad
+    ///       └─ WorldSpaceCanvas / LabelText
     /// </summary>
     public class GoPoolEntry
     {
@@ -29,11 +29,14 @@ namespace CommandP.GlobalEntity.Rendering
         public bool IsActive;
         public EntityType EntityType;
 
-        // Marker subsystem — configured by WorldSpaceMarkerSystem
+        // Marker subsystem
         public GameObject MarkerRoot;
         public MeshRenderer IconRenderer;
         public TextMeshProUGUI MarkerLabel;
         public BillboardMarker Billboard;
+
+        // Flight trail
+        public TrailRenderer Trail;
     }
 
     public class ViewPool
@@ -45,6 +48,28 @@ namespace CommandP.GlobalEntity.Rendering
 
         private const int InitialPoolSize = 64;
         private const int MaxPoolSize = 2000;
+
+        // Trail settings per entity type
+        private static readonly HashSet<EntityType> TrailTypes = new()
+        {
+            EntityType.Aircraft,
+            EntityType.Ship,
+            EntityType.Missile,
+        };
+
+        private static readonly Dictionary<EntityType, float> TrailWidths = new()
+        {
+            { EntityType.Aircraft,  8f },
+            { EntityType.Ship,      5f },
+            { EntityType.Missile,   3f },
+        };
+
+        private static readonly Dictionary<EntityType, float> TrailDurations = new()
+        {
+            { EntityType.Aircraft,  5f },
+            { EntityType.Ship,      8f },
+            { EntityType.Missile,   3f },
+        };
 
         public IReadOnlyDictionary<string, GoPoolEntry> ActiveEntries => _active;
 
@@ -83,6 +108,7 @@ namespace CommandP.GlobalEntity.Rendering
             entry.ObjectId = null;
 
             if (entry.ModelInstance != null) { Object.Destroy(entry.ModelInstance); entry.ModelInstance = null; }
+            if (entry.Trail != null) entry.Trail.Clear();
             if (entry.Anchor != null) entry.Anchor.enabled = false;
             entry.EntityRoot.SetActive(false);
             entry.EntityRoot.name = "[POOLED]";
@@ -124,10 +150,27 @@ namespace CommandP.GlobalEntity.Rendering
             root.transform.SetParent(_parentTransform, false);
 
             var anchor = root.AddComponent<CesiumGlobeAnchor>();
-            anchor.adjustOrientationForGlobeWhenMoving = false;
+            anchor.adjustOrientationForGlobeWhenMoving = true;
             anchor.detectTransformChanges = false;
 
             var handle = root.AddComponent<EntityHandle>();
+
+            // TrailRenderer — world-space flight trail
+            var trail = root.AddComponent<TrailRenderer>();
+            trail.time = 5f;
+            trail.startWidth = 8f;
+            trail.endWidth = 0.5f;
+            trail.minVertexDistance = 2f;
+            trail.autodestruct = false;
+            trail.receiveShadows = false;
+            trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            trail.numCapVertices = 3;
+            trail.numCornerVertices = 3;
+            // Default: gradient from semi-transparent white to transparent
+            trail.material = GetTrailMaterial();
+            trail.startColor = new Color(1f, 1f, 1f, 0.6f);
+            trail.endColor = new Color(1f, 1f, 1f, 0f);
+            trail.enabled = false; // disabled by default, enabled per type
 
             if (template != null)
             {
@@ -157,6 +200,7 @@ namespace CommandP.GlobalEntity.Rendering
                 EntityType  = template?.Type ?? EntityType.Ship,
                 MarkerRoot  = markerRoot,
                 Billboard   = billboard,
+                Trail       = trail,
             };
         }
 
@@ -179,6 +223,53 @@ namespace CommandP.GlobalEntity.Rendering
                 entry.Handle.ObjectId = entity.ObjectId;
                 entry.Handle.EntityType = entity.Type;
             }
+
+            // Configure trail by entity type and side
+            if (entry.Trail != null)
+            {
+                if (TrailTypes.Contains(entity.Type))
+                {
+                    entry.Trail.enabled = true;
+                    entry.Trail.time = Mathf.Infinity;
+                    entry.Trail.startWidth = TrailWidths.TryGetValue(entity.Type, out var w) ? w : 5f;
+
+                    // Color by side: Red = warm, Blue = cool
+                    Color sideColor = entity.SideId == 1
+                        ? new Color(1.0f, 0.3f, 0.2f, 0.7f)  // Red side
+                        : new Color(0.2f, 0.5f, 1.0f, 0.7f); // Blue side
+                    entry.Trail.startColor = sideColor;
+                    entry.Trail.endColor = new Color(sideColor.r, sideColor.g, sideColor.b, 0f);
+                }
+                else
+                {
+                    entry.Trail.enabled = false;
+                }
+
+                entry.Trail.Clear();
+            }
+        }
+
+        private static Material _trailMaterial;
+
+        private static Material GetTrailMaterial()
+        {
+            if (_trailMaterial == null)
+            {
+                // Use a simple unlit material with alpha blend
+                var shader = Shader.Find("Particles/Standard Unlit");
+                if (shader == null) shader = Shader.Find("Sprites/Default");
+                if (shader == null) shader = Shader.Find("Unlit/Color");
+                _trailMaterial = new Material(shader);
+                _trailMaterial.SetFloat("_Mode", 3); // Fade
+                _trailMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                _trailMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                _trailMaterial.SetInt("_ZWrite", 0);
+                _trailMaterial.DisableKeyword("_ALPHATEST_ON");
+                _trailMaterial.EnableKeyword("_ALPHABLEND_ON");
+                _trailMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                _trailMaterial.renderQueue = 3000;
+            }
+            return _trailMaterial;
         }
     }
 }

@@ -1,10 +1,11 @@
+﻿using System.Collections.Generic;
 using Unity.Mathematics;
 
 namespace CommandP.GlobalEntity
 {
     /// <summary>
-    /// 实体数据 — 纯数据层，Unity Transform 永远不作为真实数据源。
-    /// 所有地理坐标使用 double 精度。
+    /// Entity data — pure data layer. Unity Transform is never the source of truth.
+    /// All geographic coordinates use double precision.
     /// </summary>
     public class EntityData
     {
@@ -13,34 +14,39 @@ namespace CommandP.GlobalEntity
         public EntityType Type;
         public int SideId;
 
-        // 地理坐标 (WGS84, double 精度, 唯一数据源)
+        // Geographic coordinates (WGS84, double precision)
         public double LongitudeDeg;
         public double LatitudeDeg;
         public double HeightMeters;
 
-        // 运动状态
+        // Motion state
         public float HeadingDeg;
         public float SpeedKnots;
 
-        // 卫星轨道专用 (仅 Type==Satellite 时有效)
+        // Satellite orbit (only meaningful when Type == Satellite)
         public double OrbitAltitudeKm;
         public double OrbitInclinationDeg;
         public double OrbitRaanDeg;
         public double OrbitPhaseDeg;
         public bool HasOrbitParams;
 
-        // LOD 状态
+        // LOD state
         public bool IsNearLod;
 
-        // 模型键值
+        // Model asset key
         public string ModelAssetKey;
 
-        // 图标键值 (为空则按 EntityType 选择默认图标, 设置如 "submarine")
+        // Icon key (empty = default icon by EntityType, e.g. "submarine")
         public string IconKey;
 
-        // ECEF 缓存
+        // ECEF cache
         public double3 EcefPosition;
         public bool EcefDirty;
+
+        // Waypoint flight path
+        public List<double[]> Waypoints; // [lat, lon, alt] per waypoint
+        public int CurrentSegmentIndex;  // current segment index
+        public double SegmentProgress;   // 0..1 progress within current segment
 
         public EntityData()
         {

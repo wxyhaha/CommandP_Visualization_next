@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CesiumForUnity;
 using CommandP.GlobalEntity.Data;
 using CommandP.GlobalEntity.Services;
@@ -45,7 +45,7 @@ namespace CommandP.GlobalEntity.Rendering
         // IMGUI
         private string _selectedId;
         private int _debugRotTypeIdx;
-
+        
         public int EntityCount => _entityCount;
         public Camera TargetCamera => _targetCamera;
         public System.Action<string> OnMarkerClicked;
@@ -89,7 +89,7 @@ namespace CommandP.GlobalEntity.Rendering
             for (int i = 0; i < _entityCount; i++)
             {
                 var entry = _viewPool.Acquire(_entities[i]);
-                // Initially all entities start at far LOD → show marker
+                // Initially all entities start at far LOD 鈫?show marker
                 _worldSpaceMarker.ShowMarker(entry, _entities[i]);
             }
             _anchorMap = _viewPool.GetAnchorMap();
@@ -132,6 +132,7 @@ namespace CommandP.GlobalEntity.Rendering
 #endif
         }
 
+
         private void OnDestroy()
         {
             _viewPool?.ReleaseAll();
@@ -148,7 +149,7 @@ namespace CommandP.GlobalEntity.Rendering
             if (_targetCamera == null) return;
 
             var ray = _targetCamera.ScreenPointToRay(Input.mousePosition);
-            if (!Physics.Raycast(ray, out var hit, 10000000f)) return;
+            if (!Physics.Raycast(ray, out var hit)) return;
 
             var handle = hit.collider.GetComponentInParent<EntityHandle>();
             if (handle == null || string.IsNullOrEmpty(handle.ObjectId)) return;
@@ -260,8 +261,8 @@ namespace CommandP.GlobalEntity.Rendering
             if (e == null) return;
             _selectedId = objectId;
             float hdgRad = e.HeadingDeg * Mathf.Deg2Rad;
-            double behind = 3000.0;
-            double up = 500.0;
+            double behind = 1000.0;
+            double up = 200.0;
             double camLat = e.LatitudeDeg - behind * System.Math.Cos(hdgRad) / 111320.0;
             double cosLat = System.Math.Cos(e.LatitudeDeg * (System.Math.PI / 180.0));
             double camLon = e.LongitudeDeg - behind * System.Math.Sin(hdgRad) / (111320.0 * System.Math.Max(0.1, cosLat));
@@ -327,7 +328,7 @@ namespace CommandP.GlobalEntity.Rendering
                 bool sel = _selectedId == e.ObjectId;
                 GUI.backgroundColor = sel ? new Color(0.25f, 0.55f, 0.9f) : Color.white;
                 GUILayout.BeginVertical(GUI.skin.box);
-                GUILayout.Label($"{e.DisplayName}  [{e.SpeedKnots:F0}kn {e.HeadingDeg:F0}°]");
+                GUILayout.Label($"{e.DisplayName}  [{e.SpeedKnots:F0}kn {e.HeadingDeg:F0}掳]");
                 GUILayout.Label($"Lat:{e.LatitudeDeg:F3} Lon:{e.LongitudeDeg:F3} Alt:{e.HeightMeters:F0}m");
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Jump To", GUILayout.Width(140))) { _selectedId = e.ObjectId; FocusOnEntity(e.ObjectId); }
