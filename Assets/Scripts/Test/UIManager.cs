@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using CommandP.Core;
 using CommandP.Data.DTOs;
 using CommandP.Data.Stores;
@@ -27,6 +27,7 @@ namespace CommandP.Test
 
         void OnGUI()
         {
+            return; // Disabled
             var appMgr = AppManager.Instance;
             if (_unitViewManager == null)
             {
@@ -290,10 +291,10 @@ namespace CommandP.Test
         {
             if (string.Equals(typeName, "Satellite", System.StringComparison.OrdinalIgnoreCase))
             {
-                return "🛰";
+                return "";
             }
 
-            return "✈";
+            return "";
         }
 
         private void DrawAircraftInfoPanel(UnitStore unitStore)
@@ -318,14 +319,14 @@ namespace CommandP.Test
                 GUILayout.Label($"Status: {unit.Status?.Primary ?? "N/A"}");
                 if (unit.Position != null)
                 {
-                    GUILayout.Label($"Lat: {unit.Position.Latitude:F5}°");
-                    GUILayout.Label($"Lon: {unit.Position.Longitude:F5}°");
+                    GUILayout.Label($"Lat: {unit.Position.Latitude:F5}掳");
+                    GUILayout.Label($"Lon: {unit.Position.Longitude:F5}掳");
                     GUILayout.Label($"Alt: {unit.Position.Altitude:F0} m");
                 }
                 if (unit.Movement != null)
                 {
                     GUILayout.Label($"Speed: {unit.Movement.Speed:F0} kn");
-                    GUILayout.Label($"Heading: {unit.Movement.Heading:F1}°");
+                    GUILayout.Label($"Heading: {unit.Movement.Heading:F1}掳");
                 }
                 GUILayout.EndVertical();
             }
@@ -354,7 +355,7 @@ namespace CommandP.Test
                     GameObject demoPrefab = new GameObject("MissileStrikeDemo");
                     _missileDemoController = demoPrefab.AddComponent<MissileStrikeDemo>();
                     
-                    // 把它放在 CesiumGeoreference 下
+                    // 鎶婂畠鏀惧湪 CesiumGeoreference 涓?
                     var georeference = FindFirstObjectByType<CesiumForUnity.CesiumGeoreference>();
                     if (georeference != null)
                     {
@@ -365,12 +366,12 @@ namespace CommandP.Test
             }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("▶ Launch Missile", GUILayout.Height(30)))
+            if (GUILayout.Button("鈻?Launch Missile", GUILayout.Height(30)))
             {
                 _missileDemoController.LaunchDemo();
             }
 
-            if (GUILayout.Button("🎥 View Strike Zone", GUILayout.Height(30)))
+            if (GUILayout.Button("馃帴 View Strike Zone", GUILayout.Height(30)))
             {
                 LocateCameraToStrikeZone();
             }
@@ -378,7 +379,7 @@ namespace CommandP.Test
 
             GUILayout.BeginHorizontal();
             GUI.enabled = _missileDemoController.IsFlying;
-            string pauseButtonText = _missileDemoController.IsPaused ? "▶ Resume" : "⏸ Pause";
+            string pauseButtonText = _missileDemoController.IsPaused ? "鈻?Resume" : "鈴?Pause";
             if (GUILayout.Button(pauseButtonText, GUILayout.Height(28)))
             {
                 _missileDemoController.TogglePause();
@@ -414,7 +415,7 @@ namespace CommandP.Test
 
             if (_missileDemoController.IsFlying)
             {
-                GUILayout.Label("🚀 Missile in flight...", GUI.skin.textField);
+                GUILayout.Label("馃殌 Missile in flight...", GUI.skin.textField);
             }
         }
 
@@ -423,7 +424,7 @@ namespace CommandP.Test
             GUILayout.BeginHorizontal();
             GUILayout.Label(label, GUILayout.Width(60));
             float sliderValue = GUILayout.HorizontalSlider(currentValue, minValue, maxValue, GUILayout.Width(150));
-            GUILayout.Label(sliderValue.ToString("F0") + "°", GUILayout.Width(40));
+            GUILayout.Label(sliderValue.ToString("F0") + "掳", GUILayout.Width(40));
             GUILayout.EndHorizontal();
             return sliderValue;
         }
@@ -437,11 +438,11 @@ namespace CommandP.Test
             if (mainCamera == null)
                 return;
 
-            // 获取打击区域的视点
+            // 鑾峰彇鎵撳嚮鍖哄煙鐨勮鐐?
             Vector3 viewPoint = _missileDemoController.GetStrikeViewPoint();
             Vector3 viewDirection = _missileDemoController.GetStrikeViewDirection();
 
-            // 移动相机
+            // 绉诲姩鐩告満
             mainCamera.transform.position = viewPoint;
             mainCamera.transform.LookAt(mainCamera.transform.position + viewDirection, Vector3.up);
 

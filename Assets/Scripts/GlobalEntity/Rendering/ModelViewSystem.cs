@@ -22,7 +22,7 @@ namespace CommandP.GlobalEntity.Rendering
 
         private static readonly Dictionary<EntityType, float> ModelScales = new()
         {
-            { EntityType.Ship,          25f },
+            { EntityType.Ship,          150f },
             { EntityType.Aircraft,      25f },
             { EntityType.Satellite,     25f },
             { EntityType.Missile,       25f },

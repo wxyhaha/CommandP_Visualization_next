@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CommandP.GlobalEntity.Icons;
 using TMPro;
@@ -42,15 +42,15 @@ namespace CommandP.GlobalEntity.Rendering
         public static readonly Dictionary<EntityType, MarkerConfig> Configs = new()
         {
             [EntityType.Ship] = new MarkerConfig
-                { HeightOffset = 200f,  IconSize = 500f,  LabelWidth = 800f,  LabelHeight = 160f, FontSize = 120f, LabelGap = 100f,  ReferenceDistance = 6000f },
+                { HeightOffset = 500f,  IconSize = 300f,  LabelWidth = 500f,  LabelHeight = 80f,  FontSize = 60f,  LabelGap = 200f,   ReferenceDistance = 6000f },
             [EntityType.Aircraft] = new MarkerConfig
-                { HeightOffset = 500f,  IconSize = 1000f, LabelWidth = 1000f, LabelHeight = 200f, FontSize = 150f, LabelGap = 150f, ReferenceDistance = 10000f },
+                { HeightOffset = 500f,  IconSize = 200f,  LabelWidth = 500f,  LabelHeight = 80f,  FontSize = 60f,  LabelGap = 60f,   ReferenceDistance = 10000f },
             [EntityType.Satellite] = new MarkerConfig
-                { HeightOffset = 5000f, IconSize = 5000f, LabelWidth = 2000f, LabelHeight = 400f, FontSize = 300f, LabelGap = 500f, ReferenceDistance = 80000f },
+                { HeightOffset = 5000f, IconSize = 300f,  LabelWidth = 600f,  LabelHeight = 100f, FontSize = 70f,  LabelGap = 80f,   ReferenceDistance = 80000f },
             [EntityType.Missile] = new MarkerConfig
-                { HeightOffset = 500f,  IconSize = 500f,  LabelWidth = 600f,  LabelHeight = 120f, FontSize = 90f,  LabelGap = 80f,   ReferenceDistance = 4000f },
+                { HeightOffset = 500f,  IconSize = 150f,  LabelWidth = 400f,  LabelHeight = 70f,  FontSize = 55f,  LabelGap = 50f,   ReferenceDistance = 4000f },
             [EntityType.GroundVehicle] = new MarkerConfig
-                { HeightOffset = 200f,  IconSize = 400f,  LabelWidth = 600f,  LabelHeight = 120f, FontSize = 90f,  LabelGap = 80f,   ReferenceDistance = 5000f },
+                { HeightOffset = 400f,  IconSize = 150f,  LabelWidth = 400f,  LabelHeight = 70f,  FontSize = 55f,  LabelGap = 50f,   ReferenceDistance = 5000f },
         };
 
         public WorldSpaceMarkerSystem(Camera camera)
@@ -87,6 +87,19 @@ namespace CommandP.GlobalEntity.Rendering
             }
 
             SetupIcon(entry, entity, cfg);
+
+            // Tint icon by side color
+            if (entry.IconRenderer != null)
+            {
+                var mat = entry.IconRenderer.material;
+                if (mat != null)
+                {
+                    Color sideColor = entity.SideId == 1
+                        ? new Color(1f, 0.4f, 0.3f, 1f)
+                        : new Color(0.3f, 0.6f, 1f, 1f);
+                    mat.color = sideColor;
+                }
+            }
             SetupLabel(entry, entity, cfg);
         }
 
@@ -150,8 +163,8 @@ namespace CommandP.GlobalEntity.Rendering
             if (canvas == null) canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
 
-            float yOff = -cfg.IconSize * 0.5f - cfg.LabelGap - cfg.LabelHeight * 0.5f;
-            canvasGo.transform.localPosition = new Vector3(0, yOff, 0);
+            float xOff = cfg.IconSize * 0.5f + cfg.LabelGap + cfg.LabelWidth * 0.5f;
+            canvasGo.transform.localPosition = new Vector3(xOff, 0, 0);
             canvasGo.transform.localRotation = Quaternion.identity;
 
             var rt = canvasGo.GetComponent<RectTransform>();

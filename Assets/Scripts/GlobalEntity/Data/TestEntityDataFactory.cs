@@ -16,23 +16,23 @@ namespace CommandP.GlobalEntity.Data
             // ==================== Ships (Surface & Submarine) ====================
 
             list.Add(CreateShip("SHIP_DDG_01", "Type 055 Destroyer (Red)",
-                11.5, 114.3, 0.0, 15f, 180f,
+                11.5, 114.3, 5.0, 15f, 180f,
                 "bengaluru_class_destroyer_d67", 1));
 
             list.Add(CreateShip("SHIP_DDG_02", "Type 052D Destroyer (Red)",
-                11.6, 114.5, 0.0, 18f, 165f,
+                11.6, 114.5, 5.0, 18f, 165f,
                 "bengaluru_class_destroyer_d67", 1));
 
             list.Add(CreateShip("SHIP_FFG_01", "Type 054A Frigate (Red)",
-                11.3, 113.9, 0.0, 20f, 200f,
+                11.3, 113.9, 5.0, 20f, 200f,
                 "bengaluru_class_destroyer_d67", 1));
 
             list.Add(CreateShip("SHIP_FFG_02", "Type 054A Frigate (Red)",
-                11.7, 114.1, 0.0, 20f, 190f,
+                11.7, 114.1, 5.0, 20f, 190f,
                 "bengaluru_class_destroyer_d67", 1));
 
             list.Add(CreateShip("SHIP_AOE_01", "Type 901 Replenishment (Red)",
-                11.4, 114.6, 0.0, 12f, 150f,
+                11.4, 114.6, 5.0, 12f, 150f,
                 "bengaluru_class_destroyer_d67", 1));
 
             var sub = CreateShip("SHIP_SUB_01", "Type 093 SSN (Red)",
@@ -42,11 +42,11 @@ namespace CommandP.GlobalEntity.Data
             list.Add(sub);
 
             list.Add(CreateShip("SHIP_DDG_03", "Arleigh Burke DDG (Blue)",
-                10.8, 114.0, 0.0, 20f, 0f,
+                10.8, 114.0, 5.0, 20f, 0f,
                 "bengaluru_class_destroyer_d67", 2));
 
             list.Add(CreateShip("SHIP_DDG_04", "Arleigh Burke DDG (Blue)",
-                10.6, 114.2, 0.0, 20f, 30f,
+                10.6, 114.2, 5.0, 20f, 30f,
                 "bengaluru_class_destroyer_d67", 2));
 
             // ==================== Aircraft (spline flight paths) ====================

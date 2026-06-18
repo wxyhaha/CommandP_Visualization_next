@@ -16,6 +16,7 @@
 *.userprefs
 .DS_Store
 Thumbs.db
+*.js
 
 # 包缓存
 Packages/**/[Pp]ackages.lock
