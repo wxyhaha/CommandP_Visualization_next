@@ -37,6 +37,7 @@ namespace CommandP.GlobalEntity.Rendering
 
         // Flight trail
         public TrailRenderer Trail;
+        public GameObject TrailPivot;
     }
 
     public class ViewPool
@@ -60,8 +61,28 @@ namespace CommandP.GlobalEntity.Rendering
         private static readonly Dictionary<EntityType, float> TrailWidths = new()
         {
             { EntityType.Aircraft,  8f },
-            { EntityType.Ship,      5f },
+            { EntityType.Ship,      30f },
             { EntityType.Missile,   3f },
+        };
+
+        // Min vertex distance in Unity world units (meters at Cesium scale).
+        // Slow units (ships) need a tiny threshold or TrailRenderer won't emit
+        // vertices — at 15kn a ship moves ~0.13m/frame@60fps, far below 2f.
+        private static readonly Dictionary<EntityType, float> TrailMinVertexDistances = new()
+        {
+            { EntityType.Aircraft,  2f },
+            { EntityType.Ship,      0.05f },
+            { EntityType.Missile,   2f },
+        };
+
+        // Trail vertical offset in meters (ENU Up, since EntityRoot is GlobeAnchor-aligned).
+        // Ships sit near sea level and their trail is easily hidden by the ocean mesh;
+        // lift the trail pivot above the surface so it stays visible.
+        private static readonly Dictionary<EntityType, float> TrailHeightOffsets = new()
+        {
+            { EntityType.Aircraft,  0f },
+            { EntityType.Ship,      20f },
+            { EntityType.Missile,   0f },
         };
 
         private static readonly Dictionary<EntityType, float> TrailDurations = new()
@@ -155,8 +176,13 @@ namespace CommandP.GlobalEntity.Rendering
 
             var handle = root.AddComponent<EntityHandle>();
 
-            // TrailRenderer — world-space flight trail
-            var trail = root.AddComponent<TrailRenderer>();
+            // TrailRenderer — world-space flight trail.
+            // Lives on a child "TrailPivot" so we can lift it above sea level per type
+            // (EntityRoot's +Y is ENU Up once GlobeAnchor adjusts orientation).
+            var trailPivot = new GameObject("TrailPivot");
+            trailPivot.transform.SetParent(root.transform, false);
+            trailPivot.transform.localPosition = Vector3.zero;
+            var trail = trailPivot.AddComponent<TrailRenderer>();
             trail.time = 5f;
             trail.startWidth = 8f;
             trail.endWidth = 0.5f;
@@ -201,6 +227,7 @@ namespace CommandP.GlobalEntity.Rendering
                 MarkerRoot  = markerRoot,
                 Billboard   = billboard,
                 Trail       = trail,
+                TrailPivot  = trailPivot,
             };
         }
 
@@ -232,6 +259,12 @@ namespace CommandP.GlobalEntity.Rendering
                     entry.Trail.enabled = true;
                     entry.Trail.time = Mathf.Infinity;
                     entry.Trail.startWidth = TrailWidths.TryGetValue(entity.Type, out var w) ? w : 5f;
+                    entry.Trail.minVertexDistance = TrailMinVertexDistances.TryGetValue(entity.Type, out var mvd) ? mvd : 2f;
+
+                    // Lift trail pivot above sea level (EntityRoot's +Y is ENU Up).
+                    float heightOff = TrailHeightOffsets.TryGetValue(entity.Type, out var h) ? h : 0f;
+                    if (entry.TrailPivot != null)
+                        entry.TrailPivot.transform.localPosition = new Vector3(0f, heightOff, 0f);
 
                     // Color by side: Red = warm, Blue = cool
                     Color sideColor = entity.SideId == 1
