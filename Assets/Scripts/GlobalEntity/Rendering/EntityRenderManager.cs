@@ -362,7 +362,24 @@ namespace CommandP.GlobalEntity.Rendering
                 if (entry == null || entry.EntityType != selType || entry.ModelInstance == null) continue;
                 var rotationFix = entry.ModelInstance.transform.parent;
                 if (rotationFix != null && rotationFix.name == "RotationFix")
-                    rotationFix.localRotation = Quaternion.Euler(rx, ry, rz);
+                {
+                    // Combine per-model baseline correction with the runtime type offset,
+                    // otherwise the IMGUI panel overwrites the baseline every frame and
+                    // ships lose their +90° hull alignment.
+                    Vector3 baseCorr = Vector3.zero;
+                    EntityData ent = null;
+                    for (int i = 0; i < _entityCount; i++)
+                    {
+                        if (_entities[i] != null && _entities[i].ObjectId == entry.Handle.ObjectId)
+                        { ent = _entities[i]; break; }
+                    }
+                    if (ent != null)
+                    {
+                        string mk = _modelCache.GetModelKey(ent);
+                        baseCorr = ModelViewSystem.ModelCorrections.TryGetValue(mk, out var bc) ? bc : Vector3.zero;
+                    }
+                    rotationFix.localRotation = Quaternion.Euler(baseCorr + new Vector3(rx, ry, rz));
+                }
             }
 
             GUILayout.Label($"Current: ({rx:F0}, {ry:F0}, {rz:F0})");

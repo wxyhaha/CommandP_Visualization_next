@@ -33,11 +33,11 @@ namespace CommandP.GlobalEntity.Rendering
         /// Per-model rotation correction applied on RotationFix.
         /// Aligns model's nose with Unity +Z so heading rotation works.
         /// </summary>
-        private static readonly Dictionary<string, Vector3> ModelCorrections = new()
+        public static readonly Dictionary<string, Vector3> ModelCorrections = new()
         {
             { "fa-18f",                                     new Vector3(0f, -80f, 0f) },
             { "mig29",                                      new Vector3(0f, 53f, 0f) },
-            { "bengaluru_class_destroyer_d67",              Vector3.zero },
+            { "bengaluru_class_destroyer_d67",              new Vector3(0f, 103f, 0f) },
             { "the_project_941__akula__typhoon_submarine",  Vector3.zero },
             { "ugm-84",                                     Vector3.zero },
             { "mim-104",                                    Vector3.zero },
@@ -91,9 +91,12 @@ namespace CommandP.GlobalEntity.Rendering
                 float scale = ModelScales.TryGetValue(entity.Type, out var s) ? s : 25f;
                 instance.transform.localScale = Vector3.one * scale;
 
-                Vector3 modelCorr = ModelCorrections.TryGetValue(modelKey, out var mc) ? mc : Vector3.zero;
+                bool foundCorr = ModelCorrections.TryGetValue(modelKey, out var mc);
+                Vector3 modelCorr = foundCorr ? mc : Vector3.zero;
                 Vector3 typeOffset = ModelRotationOffsets.TryGetValue(entity.Type, out var to) ? to : Vector3.zero;
                 rotationFix.transform.localRotation = Quaternion.Euler(modelCorr + typeOffset);
+
+                Debug.Log($"[ModelViewSystem] ShowModel entity={entity.ObjectId} modelKey='{modelKey}' foundCorr={foundCorr} modelCorr={modelCorr} typeOffset={typeOffset} appliedEuler={modelCorr + typeOffset}");
 
                 entry.ModelInstance = instance;
                 entry.ModelRoot.SetActive(true);
@@ -149,7 +152,30 @@ namespace CommandP.GlobalEntity.Rendering
                 float headingAbs = e.HeadingDeg % 360f;
                 if (headingAbs < 0f) headingAbs += 360f;
                 entry.ModelRoot.transform.localRotation = Quaternion.Euler(0f, headingAbs, 0f);
+
+                // Diagnostics: dump world orientation of each hierarchy level for the
+                // first ship only, once per ~60 frames, to find which level drops +90°.
+                if (e.Type == EntityType.Ship && e.ObjectId == "SHIP_DDG_01")
+                {
+                    _diagFrame++;
+                    if (_diagFrame >= 60)
+                    {
+                        _diagFrame = 0;
+                        var rf = entry.ModelInstance.transform.parent;
+                        var mr = entry.ModelRoot.transform;
+                        var er = entry.EntityRoot.transform;
+                        Debug.Log($"[Orientation] heading={headingAbs:F0}" +
+                                  $" | EntityRoot.worldRot={er.rotation.eulerAngles}" +
+                                  $" | ModelRoot.localRot={mr.localRotation.eulerAngles}" +
+                                  $" | ModelRoot.worldRot={mr.rotation.eulerAngles}" +
+                                  $" | RotationFix.localRot={(rf != null ? rf.localRotation.eulerAngles.ToString() : "null")}" +
+                                  $" | RotationFix.worldRot={(rf != null ? rf.rotation.eulerAngles.ToString() : "null")}" +
+                                  $" | Model.worldRot={entry.ModelInstance.transform.rotation.eulerAngles}");
+                    }
+                }
             }
         }
+
+        private int _diagFrame;
     }
 }
