@@ -43,6 +43,12 @@ namespace CommandP.GlobalEntity
         public double3 EcefPosition;
         public bool EcefDirty;
 
+        // Trail history (ECEF, doubles — immune to Cesium OriginShift).
+        // Sampled by arc-length threshold; capped at a per-type max.
+        public List<double3> EcefTrailHistory;
+        public double TrailAccumulatedDistanceM;
+        public double3 LastTrailSampleEcef;
+
         // Waypoint flight path
         public List<double[]> Waypoints; // [lat, lon, alt] per waypoint
         public int CurrentSegmentIndex;  // current segment index
@@ -51,6 +57,7 @@ namespace CommandP.GlobalEntity
         public EntityData()
         {
             EcefDirty = true;
+            EcefTrailHistory = new List<double3>();
         }
     }
 }

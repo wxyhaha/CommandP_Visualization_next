@@ -12,7 +12,8 @@ namespace CommandP.GlobalEntity.Rendering
     /// Pool entry — EntityRoot is the single source of world position (via GlobeAnchor).
     ///
     /// Hierarchy:
-    ///   EntityRoot (CesiumGlobeAnchor + EntityHandle + TrailRenderer)
+    ///   EntityRoot (CesiumGlobeAnchor + EntityHandle)
+    ///   ├─ TrailPivot (LineRenderer, world-space positions refreshed each frame)
     ///   ├─ ModelRoot   (3D GLB, LOD near)
     ///   └─ MarkerRoot  (WorldSpace tactical marker, LOD far)
     ///       ├─ IconQuad
@@ -35,8 +36,8 @@ namespace CommandP.GlobalEntity.Rendering
         public TextMeshProUGUI MarkerLabel;
         public BillboardMarker Billboard;
 
-        // Flight trail
-        public TrailRenderer Trail;
+        // Trail (LineRenderer; positions refreshed from ECEF history each frame)
+        public LineRenderer Trail;
         public GameObject TrailPivot;
     }
 
@@ -51,7 +52,7 @@ namespace CommandP.GlobalEntity.Rendering
         private const int MaxPoolSize = 2000;
 
         // Trail settings per entity type
-        private static readonly HashSet<EntityType> TrailTypes = new()
+        public static readonly HashSet<EntityType> TrailTypes = new()
         {
             EntityType.Aircraft,
             EntityType.Ship,
@@ -65,31 +66,32 @@ namespace CommandP.GlobalEntity.Rendering
             { EntityType.Missile,   3f },
         };
 
-        // Min vertex distance in Unity world units (meters at Cesium scale).
-        // Slow units (ships) need a tiny threshold or TrailRenderer won't emit
-        // vertices — at 15kn a ship moves ~0.13m/frame@60fps, far below 2f.
-        private static readonly Dictionary<EntityType, float> TrailMinVertexDistances = new()
-        {
-            { EntityType.Aircraft,  2f },
-            { EntityType.Ship,      0.05f },
-            { EntityType.Missile,   2f },
-        };
-
         // Trail vertical offset in meters (ENU Up, since EntityRoot is GlobeAnchor-aligned).
         // Ships sit near sea level and their trail is easily hidden by the ocean mesh;
         // lift the trail pivot above the surface so it stays visible.
-        private static readonly Dictionary<EntityType, float> TrailHeightOffsets = new()
+        public static readonly Dictionary<EntityType, float> TrailHeightOffsets = new()
         {
             { EntityType.Aircraft,  0f },
             { EntityType.Ship,      20f },
             { EntityType.Missile,   0f },
         };
 
-        private static readonly Dictionary<EntityType, float> TrailDurations = new()
+        // ECEF history cap. Hard ceiling — once the queue fills, oldest points are
+        // dropped. Memory is constant: MaxPoints * 24 bytes per entity.
+        public static readonly Dictionary<EntityType, int> TrailMaxPoints = new()
         {
-            { EntityType.Aircraft,  5f },
-            { EntityType.Ship,      8f },
-            { EntityType.Missile,   3f },
+            { EntityType.Aircraft,  300 },
+            { EntityType.Ship,      400 },
+            { EntityType.Missile,   150 },
+        };
+
+        // Minimum arc length (meters) between successive trail samples.
+        // Smaller = denser trail, more LineRenderer positions.
+        public static readonly Dictionary<EntityType, float> TrailSampleDistanceMeters = new()
+        {
+            { EntityType.Aircraft,  100f },
+            { EntityType.Ship,      5f },
+            { EntityType.Missile,   30f },
         };
 
         public IReadOnlyDictionary<string, GoPoolEntry> ActiveEntries => _active;
@@ -129,7 +131,7 @@ namespace CommandP.GlobalEntity.Rendering
             entry.ObjectId = null;
 
             if (entry.ModelInstance != null) { Object.Destroy(entry.ModelInstance); entry.ModelInstance = null; }
-            if (entry.Trail != null) entry.Trail.Clear();
+            if (entry.Trail != null) entry.Trail.positionCount = 0;
             if (entry.Anchor != null) entry.Anchor.enabled = false;
             entry.EntityRoot.SetActive(false);
             entry.EntityRoot.name = "[POOLED]";
@@ -176,23 +178,26 @@ namespace CommandP.GlobalEntity.Rendering
 
             var handle = root.AddComponent<EntityHandle>();
 
-            // TrailRenderer — world-space flight trail.
+            // LineRenderer — world-space trail.
             // Lives on a child "TrailPivot" so we can lift it above sea level per type
             // (EntityRoot's +Y is ENU Up once GlobeAnchor adjusts orientation).
+            // Positions are refreshed from ECEF history each frame by EntityTrailSystem,
+            // so this LineRenderer is just a render sink — no time-based accumulation.
             var trailPivot = new GameObject("TrailPivot");
             trailPivot.transform.SetParent(root.transform, false);
             trailPivot.transform.localPosition = Vector3.zero;
-            var trail = trailPivot.AddComponent<TrailRenderer>();
-            trail.time = 5f;
+            var trail = trailPivot.AddComponent<LineRenderer>();
+            trail.useWorldSpace = true;
+            trail.loop = false;
+            trail.positionCount = 0;
             trail.startWidth = 8f;
             trail.endWidth = 0.5f;
-            trail.minVertexDistance = 2f;
-            trail.autodestruct = false;
             trail.receiveShadows = false;
             trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             trail.numCapVertices = 3;
             trail.numCornerVertices = 3;
-            // Default: gradient from semi-transparent white to transparent
+            trail.alignment = LineAlignment.View;
+            trail.textureMode = LineTextureMode.Stretch;
             trail.material = GetTrailMaterial();
             trail.startColor = new Color(1f, 1f, 1f, 0.6f);
             trail.endColor = new Color(1f, 1f, 1f, 0f);
@@ -257,28 +262,34 @@ namespace CommandP.GlobalEntity.Rendering
                 if (TrailTypes.Contains(entity.Type))
                 {
                     entry.Trail.enabled = true;
-                    entry.Trail.time = Mathf.Infinity;
-                    entry.Trail.startWidth = TrailWidths.TryGetValue(entity.Type, out var w) ? w : 5f;
-                    entry.Trail.minVertexDistance = TrailMinVertexDistances.TryGetValue(entity.Type, out var mvd) ? mvd : 2f;
+                    float w = TrailWidths.TryGetValue(entity.Type, out var ww) ? ww : 5f;
+                    entry.Trail.startWidth = w;
+                    entry.Trail.endWidth = w;
+                    entry.Trail.widthMultiplier = 1f;
 
                     // Lift trail pivot above sea level (EntityRoot's +Y is ENU Up).
                     float heightOff = TrailHeightOffsets.TryGetValue(entity.Type, out var h) ? h : 0f;
                     if (entry.TrailPivot != null)
                         entry.TrailPivot.transform.localPosition = new Vector3(0f, heightOff, 0f);
 
-                    // Color by side: Red = warm, Blue = cool
+                    // Color by side: Red = warm, Blue = cool.
+                    // LineRenderer interpolates startColor (index 0 = oldest/far) to
+                    // endColor (index N-1 = newest/near unit). We want the trail bright
+                    // near the unit and fading toward the old tail, so:
+                    //   startColor = transparent (far)
+                    //   endColor   = full side color (near)
                     Color sideColor = entity.SideId == 1
                         ? new Color(1.0f, 0.3f, 0.2f, 0.7f)  // Red side
                         : new Color(0.2f, 0.5f, 1.0f, 0.7f); // Blue side
-                    entry.Trail.startColor = sideColor;
-                    entry.Trail.endColor = new Color(sideColor.r, sideColor.g, sideColor.b, 0f);
+                    entry.Trail.startColor = new Color(sideColor.r, sideColor.g, sideColor.b, 0f);
+                    entry.Trail.endColor = sideColor;
                 }
                 else
                 {
                     entry.Trail.enabled = false;
                 }
 
-                entry.Trail.Clear();
+                entry.Trail.positionCount = 0;
             }
         }
 

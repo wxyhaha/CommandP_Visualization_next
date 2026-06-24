@@ -34,6 +34,7 @@ namespace CommandP.GlobalEntity.Rendering
         private ViewPool _viewPool;
         private LODSwitcher _lodSwitcher;
         private EntityMotionDriver _motionDriver;
+        private EntityTrailSystem _trailSystem;
 
         private Dictionary<string, CesiumGlobeAnchor> _anchorMap;
         private Transform _globalEntityRoot;
@@ -82,6 +83,8 @@ namespace CommandP.GlobalEntity.Rendering
             _lodSwitcher = new LODSwitcher(_worldSpaceMarker, _modelViewSystem, _viewPool.ActiveEntries);
             _lodSwitcher.DefaultLodDistance = _defaultLodDistance;
 
+            _trailSystem = new EntityTrailSystem(_cesiumGeoreference, _viewPool.ActiveEntries);
+
             _entities = TestEntityDataFactory.CreateSouthChinaSeaScenario();
             _entityCount = _entities.Length;
 
@@ -116,6 +119,8 @@ namespace CommandP.GlobalEntity.Rendering
             GlobeAnchorHelper.ApplyAllPositions(_entities, _entityCount, _anchorMap);
             _lodSwitcher.EvaluateAll(_entities, _entityCount, _targetCamera);
             _modelViewSystem.UpdateTransforms(_entities, _entityCount);
+            _trailSystem.SampleHistory(_entities, _entityCount);
+            _trailSystem.RefreshLineRenderers(_entities, _entityCount);
             HandleMarkerClick();
 
 #if UNITY_EDITOR
